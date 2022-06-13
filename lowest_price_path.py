@@ -38,66 +38,7 @@ def graph_min_price_matrix(vertices: list, schedule:pd.DataFrame):
 
     return matrix_prices,matrix_trains
 
-def create_costs_matrix(matrix):
-    C = matrix
-    min_in_rows = C.min(axis=1).reshape(C.shape[0],1)
-    matrix_min_in_rows = np.tile(min_in_rows,(1, C.shape[0]))
-    C = C - matrix_min_in_rows
-    min_in_cols = C.min(axis=0).reshape(1,C.shape[0])
-    matrix_min_in_cols = np.tile(min_in_cols,(C.shape[0],1))
-    C = C - min_in_cols
-    R = min_in_rows.sum()+min_in_cols.sum()
-    return C,R
-def branch_bound(matrix_prices,matrix_trains,stations):
-    
-
-    #Choose cell with max penalty
-    min_price = INF
-    for k in range(matrix_prices.shape[0]):
-        C,R = create_costs_matrix(matrix_prices)
-        temp_stations = stations.copy()
-        path = []
-        start_cell = k
-        
-        while C.shape[0] != 2:
-            min_penalty,new_C,new_cell = INF,C,1
-            prev_shape = C.shape
-            path.append(temp_stations[start_cell])
-            temp_stations.pop(start_cell)
-            for i in range(C.shape[0]):
-                if i == start_cell:
-                    continue
-
-                C_temp = C
-                C_temp[i][start_cell] = INF
-                C_temp = np.delete(C_temp, i, 1)
-                C_temp = np.delete(C_temp,start_cell,0)
-                C_temp,R_temp = create_costs_matrix(C_temp)
-
-                cost = R_temp+R+C[start_cell][i]
-                if min_penalty > cost:
-
-                    min_penalty = cost
-                    new_C = C_temp
-                    new_cell = i
-
-            if prev_shape == new_C.shape:
-                break
-
-            C = new_C
-            R = min_penalty
-            start_cell = new_cell
-            
-
-        if C.shape[0] == 2 and min_price > R:
-            min_price = R
-            path.append(temp_stations[start_cell])
-            temp_stations.pop(start_cell)
-            path.extend(temp_stations)
-            final_path = path
-    print(min_price,final_path)
-
-def brute_force(matrix_prices,matrix_trains,stations):
+def brute_force(matrix_prices:np.ndarray,matrix_trains:np.ndarray,stations:list):
     number_of_verticies = matrix_prices.shape[0]
 
     def recursive_search(cur_vertex,used,path,trains):
@@ -150,7 +91,7 @@ def brute_force(matrix_prices,matrix_trains,stations):
             lowest_price = round(price,2)
 
     return optimal_path,lowest_price,trains_used
-def greedy_alg(matrix_prices,matrix_trains,stations):
+def greedy_alg(matrix_prices:np.ndarray,matrix_trains:np.ndarray,stations:list):
     
     number_of_verticies = matrix_prices.shape[0]
 
